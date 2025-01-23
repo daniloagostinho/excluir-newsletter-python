@@ -25,9 +25,14 @@ Certifique-se de ter instalado:
    cd excluir-emails-gmail-python
    ```
 
-2. Instale as dependências:
+2. Instale as dependências com pip:
    ```bash
    pip install -r requirements.txt
+   ```
+
+   2. Instale as dependências com conda:
+   ```bash
+   conda install panda
    ```
 
 3. Configure o arquivo `credentials.json`:
