@@ -1,1 +1,1 @@
-token.json
+token.json credentials.json pycache/ *.pyc .env
