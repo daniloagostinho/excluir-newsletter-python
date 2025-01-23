@@ -1,8 +1,10 @@
-# Excluir E-mails Gmail com Python
+# Excluir E-mails com Python
 
 ![Robô Excluir e-mails](https://raw.githubusercontent.com/daniloagostinho/excluir-emails-gmail-python/refs/heads/main/images/robot.png) | ![Python](https://raw.githubusercontent.com/daniloagostinho/excluir-emails-gmail-python/refs/heads/main/images/python.png) | ![Gmail](https://raw.githubusercontent.com/daniloagostinho/excluir-emails-gmail-python/refs/heads/main/images/gmail.png)
 
 Este projeto permite excluir e-mails automaticamente do Gmail com base em uma lista de remetentes, fornecida manualmente ou através de uma planilha Excel. Ele utiliza a API do Gmail para realizar a autenticação e interações com a conta.
+
+> **Nota:** Atualmente, na versão **1.0**, o suporte é limitado ao Gmail. Versões futuras incluirão suporte a outros provedores de e-mail.
 
 ## Recursos
 - Autenticação segura utilizando OAuth2.
