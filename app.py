@@ -6,7 +6,7 @@ from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 
 # Escopos necessários para acesso ao Gmail
-SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
+SCOPES = ['https://mail.google.com/']
 
 def authenticate_gmail():
     """Autentica com a API do Gmail e retorna o serviço."""
@@ -54,7 +54,7 @@ def main():
     service = authenticate_gmail()
 
     # Opção 1: Lista de remetentes manual
-    senders = ['noreply@voeazul-news.com.br']
+    senders = ['no-reply@mail.instagram.com']
 
     # Opção 2: Carregar remetentes de uma planilha Excel
     # senders = load_senders_from_excel('remetentes.xlsx')
