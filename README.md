@@ -1,5 +1,7 @@
 # Excluir E-mails Gmail com Python
 
+![Imagem 1](path/to/image1.png) | ![Imagem 2](path/to/image2.png) | ![Imagem 3](path/to/image3.png)
+
 Este projeto permite excluir e-mails automaticamente do Gmail com base em uma lista de remetentes, fornecida manualmente ou através de uma planilha Excel. Ele utiliza a API do Gmail para realizar a autenticação e interações com a conta.
 
 ## Recursos
