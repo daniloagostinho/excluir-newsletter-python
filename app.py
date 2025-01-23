@@ -74,10 +74,10 @@ def main():
     service = authenticate_gmail()
 
     # Opção 1: Lista de remetentes manual
-    senders = ['no-reply@mail.instagram.com']
+    # senders = ['no-reply@mail.instagram.com']
 
     # Opção 2: Carregar remetentes de uma planilha Excel
-    # senders = load_senders_from_excel('remetentes.xlsx')
+    senders = load_senders_from_excel('remetentes.xlsx')
 
     # Deleta os e-mails
     delete_emails_from_senders(service, senders)

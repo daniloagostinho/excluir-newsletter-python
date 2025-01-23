@@ -1,4 +1,4 @@
-# Excluir E-mails com Python
+# Excluir E-mails em lote com Python
 
 ![Robô Excluir e-mails](https://raw.githubusercontent.com/daniloagostinho/excluir-emails-gmail-python/refs/heads/main/images/robot.png) | ![Python](https://raw.githubusercontent.com/daniloagostinho/excluir-emails-gmail-python/refs/heads/main/images/python.png) | ![Gmail](https://raw.githubusercontent.com/daniloagostinho/excluir-emails-gmail-python/refs/heads/main/images/gmail.png)
 
