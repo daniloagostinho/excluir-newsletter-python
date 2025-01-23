@@ -21,8 +21,8 @@ Certifique-se de ter instalado:
 
 1. Clone o repositório:
    ```bash
-   git clone https://github.com/seu-usuario/nome-do-projeto.git
-   cd nome-do-projeto
+   git clone git@github.com:daniloagostinho/excluir-emails-gmail-python.git
+   cd excluir-emails-gmail-python
    ```
 
 2. Instale as dependências:
