@@ -17,6 +17,11 @@ SCOPES = ['https://mail.google.com/']
 def authenticate_gmail():
     """Autentica com a API do Gmail e retorna o serviço."""
     creds = None
+    
+    # Remove o token.json se existir para forçar uma nova autenticação
+    if os.path.exists('token.json'):
+        os.remove('token.json')
+    
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
     if not creds or not creds.valid:
@@ -31,15 +36,26 @@ def authenticate_gmail():
             token.write(creds.to_json())
     return build('gmail', 'v1', credentials=creds)
 
+def get_all_emails(service, query):
+    """Recupera todos os e-mails correspondentes à consulta."""
+    messages = []
+    results = service.users().messages().list(userId='me', q=query).execute()
+    messages.extend(results.get('messages', []))
+    
+    while 'nextPageToken' in results:
+        results = service.users().messages().list(userId='me', q=query, pageToken=results['nextPageToken']).execute()
+        messages.extend(results.get('messages', []))
+    
+    return messages
+
 def delete_emails_from_senders(service, senders):
     """Deleta e-mails de uma lista de remetentes."""
     for sender in senders:
         console.rule(f"[bold blue]Procurando e-mails de: [green]{sender}")
 
-        # Pesquisa e-mails do remetente
+        # Pesquisa todos os e-mails do remetente
         query = f'from:{sender}'
-        results = service.users().messages().list(userId='me', q=query).execute()
-        messages = results.get('messages', [])
+        messages = get_all_emails(service, query)
 
         if not messages:
             console.print(f"[yellow]Nenhum e-mail encontrado de {sender}.")
