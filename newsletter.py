@@ -5,7 +5,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from rich.console import Console
-from rich.progress import Progress
+from rich.progress import Progress, SpinnerColumn
 from rich.prompt import Confirm, Prompt
 
 # Configurando console Rich para feedback visual
@@ -47,15 +47,20 @@ def get_newsletter_emails(service, max_results=50, page_token=None):
 def unsubscribe_and_delete_emails(service):
     """Lista newsletters paginadamente e permite ao usuário excluir aos poucos."""
     console.rule("[bold blue]Procurando newsletters e e-mails promocionais")
-    page_token = None
+    
+    with Progress(SpinnerColumn(), console=console) as progress:
+        task = progress.add_task("[cyan]Buscando newsletters...", total=None)
+        page_token = None
+        messages, page_token = get_newsletter_emails(service, max_results=50, page_token=page_token)
+        progress.stop()
+    
+    total_newsletters = len(messages)
+    console.print(f"[bold green]Foram encontrados {total_newsletters} e-mails de newsletters.")
+    
+    if not Confirm.ask("Deseja começar a excluí-los?"):
+        return
     
     while True:
-        messages, page_token = get_newsletter_emails(service, max_results=50, page_token=page_token)
-        
-        if not messages:
-            console.print("[yellow]Nenhuma newsletter encontrada ou todas já foram processadas.")
-            break
-        
         senders = {}
         for message in messages:
             msg_id = message['id']
