@@ -36,33 +36,43 @@ def authenticate_gmail():
             token.write(creds.to_json())
     return build('gmail', 'v1', credentials=creds)
 
-def get_newsletter_emails(service, max_results=50, page_token=None):
+def get_newsletter_emails(service):
     """Recupera e-mails de newsletters paginadamente."""
     query = 'category:promotions OR "unsubscribe"'
-    results = service.users().messages().list(userId='me', q=query, maxResults=max_results, pageToken=page_token).execute()
-    messages = results.get('messages', [])
-    next_page_token = results.get('nextPageToken', None)
-    return messages, next_page_token
+    messages = []
+    page_token = None
+    
+    with Progress(SpinnerColumn(), console=console) as progress:
+        task = progress.add_task("[cyan]Buscando newsletters...", total=None)
+        while True:
+            results = service.users().messages().list(userId='me', q=query, maxResults=50, pageToken=page_token).execute()
+            messages.extend(results.get('messages', []))
+            page_token = results.get('nextPageToken', None)
+            if not page_token:
+                break
+        progress.stop()
+    
+    return messages
 
 def unsubscribe_and_delete_emails(service):
     """Lista newsletters paginadamente e permite ao usuário excluir aos poucos."""
     console.rule("[bold blue]Procurando newsletters e e-mails promocionais")
-    
-    with Progress(SpinnerColumn(), console=console) as progress:
-        task = progress.add_task("[cyan]Buscando newsletters...", total=None)
-        page_token = None
-        messages, page_token = get_newsletter_emails(service, max_results=50, page_token=page_token)
-        progress.stop()
+    messages = get_newsletter_emails(service)
     
     total_newsletters = len(messages)
+    with Progress(SpinnerColumn(), console=console) as progress:
+        task = progress.add_task("[cyan]Carregando e-mails para exclusão...", total=None)
+        progress.stop()
+    
     console.print(f"[bold green]Foram encontrados {total_newsletters} e-mails de newsletters.")
     
     if not Confirm.ask("Deseja começar a excluí-los?"):
         return
     
+    page_token = None
     while True:
         senders = {}
-        for message in messages:
+        for message in messages[:50]:  # Processa 50 por vez
             msg_id = message['id']
             msg_data = service.users().messages().get(userId='me', id=msg_id, format='metadata', metadataHeaders=['From']).execute()
             sender = next((header['value'] for header in msg_data['payload']['headers'] if header['name'] == 'From'), None)
@@ -83,7 +93,8 @@ def unsubscribe_and_delete_emails(service):
             else:
                 console.print(f"[bold yellow]Os e-mails de {sender} não foram apagados.")
         
-        if not Confirm.ask("Deseja continuar vendo mais newsletters?"):
+        messages = messages[50:]  # Remove os 50 processados
+        if not messages or not Confirm.ask("Deseja continuar vendo mais newsletters?"):
             break
 
 def main():
