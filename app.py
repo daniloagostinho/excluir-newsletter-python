@@ -6,7 +6,7 @@ from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn
-from rich.prompt import Confirm, Prompt
+from rich.prompt import Confirm
 
 # Configurando console Rich para feedback visual
 console = Console()
@@ -36,16 +36,16 @@ def authenticate_gmail():
             token.write(creds.to_json())
     return build('gmail', 'v1', credentials=creds)
 
-def get_newsletter_emails(service):
-    """Recupera e-mails de newsletters paginadamente."""
-    query = 'category:promotions OR "unsubscribe"'
+def get_all_newsletter_emails(service):
+    """Recupera todos os e-mails de newsletters no histórico."""
+    query = 'category:promotions'
     messages = []
     page_token = None
     
     with Progress(SpinnerColumn(), console=console) as progress:
-        task = progress.add_task("[cyan]Buscando newsletters...", total=None)
+        task = progress.add_task("[cyan]Buscando todos os e-mails de newsletters no histórico...", total=None)
         while True:
-            results = service.users().messages().list(userId='me', q=query, maxResults=50, pageToken=page_token).execute()
+            results = service.users().messages().list(userId='me', q=query, maxResults=500, pageToken=page_token).execute()
             messages.extend(results.get('messages', []))
             page_token = results.get('nextPageToken', None)
             if not page_token:
@@ -54,23 +54,31 @@ def get_newsletter_emails(service):
     
     return messages
 
-def unsubscribe_and_delete_emails(service):
-    """Lista newsletters paginadamente e permite ao usuário excluir aos poucos."""
-    console.rule("[bold blue]Procurando newsletters e e-mails promocionais")
-    messages = get_newsletter_emails(service)
+def delete_newsletter_emails(service):
+    """Lista todos os e-mails de newsletters e permite ao usuário excluí-los."""
+    console.rule("[bold blue]Procurando newsletters e e-mails promocionais no histórico")
+    messages = get_all_newsletter_emails(service)
     
     total_newsletters = len(messages)
     with Progress(SpinnerColumn(), console=console) as progress:
         task = progress.add_task("[cyan]Carregando e-mails para exclusão...", total=None)
         progress.stop()
     
-    console.print(f"[bold green]Foram encontrados {total_newsletters} e-mails de newsletters.")
+    console.print(f"[bold green]Foram encontrados {total_newsletters} e-mails de newsletters no histórico.")
     
-    if not Confirm.ask("Deseja começar a excluí-los?"):
+    if Confirm.ask(f"Deseja excluir todos os {total_newsletters} e-mails de newsletters de uma vez?"):
+        with Progress() as progress:
+            task = progress.add_task("[red]Apagando...", total=total_newsletters)
+            for message in messages:
+                service.users().messages().delete(userId='me', id=message['id']).execute()
+                progress.advance(task)
+        console.print(f"[bold green]Todos os {total_newsletters} e-mails de newsletters foram excluídos.")
         return
     
-    page_token = None
-    while True:
+    if not Confirm.ask("Prefere visualizar os e-mails antes de excluir?"):
+        return
+    
+    while messages:
         senders = {}
         for message in messages[:50]:  # Processa 50 por vez
             msg_id = message['id']
@@ -80,8 +88,8 @@ def unsubscribe_and_delete_emails(service):
                 senders[sender] = senders.get(sender, []) + [msg_id]
         
         for sender, msg_ids in senders.items():
-            if Confirm.ask(f"Deseja se desinscrever e excluir {len(msg_ids)} e-mails de {sender}?"):
-                console.print(f"[cyan]Desinscrevendo e apagando e-mails de {sender}...")
+            if Confirm.ask(f"Deseja excluir {len(msg_ids)} e-mails de {sender}?"):
+                console.print(f"[cyan]Apagando e-mails de {sender}...")
                 
                 with Progress() as progress:
                     task = progress.add_task("[red]Apagando...", total=len(msg_ids))
@@ -102,7 +110,7 @@ def main():
     service = authenticate_gmail()
     
     # Processa newsletters e opções de exclusão
-    unsubscribe_and_delete_emails(service)
+    delete_newsletter_emails(service)
 
 if __name__ == '__main__':
     main()
