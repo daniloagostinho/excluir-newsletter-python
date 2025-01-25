@@ -1,15 +1,16 @@
-# Excluir E-mails em Lote com Python
+# Gerenciador de Newsletters com Python
 
-![Robô Excluir e-mails](https://raw.githubusercontent.com/daniloagostinho/excluir-emails-gmail-python/refs/heads/main/images/robot.png) | ![Python](https://raw.githubusercontent.com/daniloagostinho/excluir-emails-gmail-python/refs/heads/main/images/python.png) | ![Gmail](https://raw.githubusercontent.com/daniloagostinho/excluir-emails-gmail-python/refs/heads/main/images/gmail.png)
+![Automação de E-mails](https://raw.githubusercontent.com/daniloagostinho/excluir-emails-gmail-python/refs/heads/main/images/robot.png) | ![Python](https://raw.githubusercontent.com/daniloagostinho/excluir-emails-gmail-python/refs/heads/main/images/python.png) | ![Gmail](https://raw.githubusercontent.com/daniloagostinho/excluir-emails-gmail-python/refs/heads/main/images/gmail.png)
 
-Este projeto permite excluir e-mails automaticamente do Gmail com base em uma lista de remetentes, fornecida manualmente ou através de uma planilha Excel. Ele utiliza a API do Gmail para realizar a autenticação e interações com a conta.
+Este projeto permite **listar, se desinscrever e excluir automaticamente** e-mails de newsletters no Gmail. Ele utiliza a API do Gmail para identificar e processar inscrições em listas de e-mails promocionais.
 
 > **Nota:** Atualmente, na versão **1.0**, o suporte é limitado ao Gmail. Versões futuras incluirão suporte a outros provedores de e-mail.
 
 ## Recursos
 - Autenticação segura utilizando OAuth2.
-- Exclusão de e-mails com base em remetentes especificados.
-- Carregamento de remetentes a partir de uma planilha Excel.
+- Identificação automática de newsletters e e-mails promocionais.
+- Opção de desinscrição automática antes da exclusão.
+- Exclusão seletiva ou em massa de newsletters.
 - Feedback visual amigável no terminal.
 
 ## Requisitos
@@ -21,8 +22,8 @@ Certifique-se de ter instalado:
 
 1. Clone o repositório:
    ```bash
-   git clone git@github.com:daniloagostinho/excluir-emails-gmail-python.git
-   cd excluir-emails-gmail-python
+   git clone git@github.com:daniloagostinho/gerenciador-newsletters-python.git
+   cd gerenciador-newsletters-python
    ```
 
 2. Instale as dependências com pip:
@@ -32,7 +33,7 @@ Certifique-se de ter instalado:
 
    2. Instale as dependências com conda:
    ```bash
-   conda install panda
+   conda install pandas requests
    ```
 
 3. Configure o arquivo `credentials.json`:
@@ -54,10 +55,12 @@ Certifique-se de ter instalado:
    ```
 
 2. Escolha entre:
-   - Fornecer uma lista de remetentes manualmente no código.
-   - Carregar remetentes de uma planilha Excel com uma coluna chamada `Email`.
+   - **Excluir todas as newsletters de uma vez**
+   - **Visualizar as inscrições e selecionar quais remover**
 
-3. Siga as instruções no terminal para excluir os e-mails.
+3. O script tentará **se desinscrever automaticamente** das newsletters antes de excluí-las.
+
+4. Siga as instruções no terminal para concluir o processo.
 
 ## Estrutura do Projeto
 
@@ -97,14 +100,14 @@ Contribuições são bem-vindas! Siga as instruções abaixo:
 Este projeto está licenciado sob a [MIT License](LICENSE).
 
 ## Roadmap
-- [ ] Adicionar suporte a etiquetas para classificação de e-mails antes da exclusão.
+- [ ] Melhorar o reconhecimento automático de links de desinscrição.
+- [ ] Adicionar suporte a etiquetas para classificar e-mails antes da exclusão.
 - [ ] Melhorar feedback visual no terminal com mais opções de UX.
 - [ ] Adicionar suporte a múltiplas contas de Gmail.
 
 ## Problemas Conhecidos
 - Apenas mensagens com permissões adequadas podem ser excluídas. Certifique-se de que o escopo `https://mail.google.com/` está configurado corretamente.
-- Algumas mensagens podem não ser encontradas dependendo da sintaxe da consulta no Gmail.
+- Alguns links de desinscrição podem exigir interação manual.
 
 ## Contato
 Caso tenha dúvidas ou problemas, entre em contato pelo e-mail [danilodev.silva@gmail.com](mailto:danilodev.silva@gmail.com).
-

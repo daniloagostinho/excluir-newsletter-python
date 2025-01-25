@@ -5,8 +5,8 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from rich.console import Console
-from rich.progress import Progress
-from rich.prompt import Confirm
+from rich.progress import Progress, SpinnerColumn
+from rich.prompt import Confirm, Prompt
 
 # Configurando console Rich para feedback visual
 console = Console()
@@ -36,67 +36,73 @@ def authenticate_gmail():
             token.write(creds.to_json())
     return build('gmail', 'v1', credentials=creds)
 
-def get_all_emails(service, query):
-    """Recupera todos os e-mails correspondentes à consulta."""
+def get_newsletter_emails(service):
+    """Recupera e-mails de newsletters paginadamente."""
+    query = 'category:promotions OR "unsubscribe"'
     messages = []
-    results = service.users().messages().list(userId='me', q=query).execute()
-    messages.extend(results.get('messages', []))
+    page_token = None
     
-    while 'nextPageToken' in results:
-        results = service.users().messages().list(userId='me', q=query, pageToken=results['nextPageToken']).execute()
-        messages.extend(results.get('messages', []))
+    with Progress(SpinnerColumn(), console=console) as progress:
+        task = progress.add_task("[cyan]Buscando newsletters...", total=None)
+        while True:
+            results = service.users().messages().list(userId='me', q=query, maxResults=50, pageToken=page_token).execute()
+            messages.extend(results.get('messages', []))
+            page_token = results.get('nextPageToken', None)
+            if not page_token:
+                break
+        progress.stop()
     
     return messages
 
-def delete_emails_from_senders(service, senders):
-    """Deleta e-mails de uma lista de remetentes."""
-    for sender in senders:
-        console.rule(f"[bold blue]Procurando e-mails de: [green]{sender}")
-
-        # Pesquisa todos os e-mails do remetente
-        query = f'from:{sender}'
-        messages = get_all_emails(service, query)
-
-        if not messages:
-            console.print(f"[yellow]Nenhum e-mail encontrado de {sender}.")
-            continue
-
-        quantity = len(messages)
-        console.print(f"[bold green]Foram encontrados {quantity} e-mails.")
-
-        # Pergunta ao usuário se deseja apagar os e-mails
-        if Confirm.ask(f"Deseja apagar todos os {quantity} e-mails de {sender}?"):
-            console.print("[cyan]Apagando e-mails, aguarde um instante...")
-            
-            # Exibe um loading enquanto apaga os e-mails
-            with Progress() as progress:
-                task = progress.add_task("[red]Apagando...", total=quantity)
-                for message in messages:
-                    msg_id = message['id']
-                    service.users().messages().delete(userId='me', id=msg_id).execute()
-                    progress.advance(task)
-
-            console.print(f"[bold green]Os {quantity} e-mails foram excluídos. Verifique sua caixa de entrada.")
-        else:
-            console.print(f"[bold yellow]Os e-mails de {sender} não foram apagados.")
-
-def load_senders_from_excel(file_path):
-    """Carrega a lista de remetentes de uma planilha Excel."""
-    df = pd.read_excel(file_path)
-    return df['Email'].tolist()
+def unsubscribe_and_delete_emails(service):
+    """Lista newsletters paginadamente e permite ao usuário excluir aos poucos."""
+    console.rule("[bold blue]Procurando newsletters e e-mails promocionais")
+    messages = get_newsletter_emails(service)
+    
+    total_newsletters = len(messages)
+    with Progress(SpinnerColumn(), console=console) as progress:
+        task = progress.add_task("[cyan]Carregando e-mails para exclusão...", total=None)
+        progress.stop()
+    
+    console.print(f"[bold green]Foram encontrados {total_newsletters} e-mails de newsletters.")
+    
+    if not Confirm.ask("Deseja começar a excluí-los?"):
+        return
+    
+    page_token = None
+    while True:
+        senders = {}
+        for message in messages[:50]:  # Processa 50 por vez
+            msg_id = message['id']
+            msg_data = service.users().messages().get(userId='me', id=msg_id, format='metadata', metadataHeaders=['From']).execute()
+            sender = next((header['value'] for header in msg_data['payload']['headers'] if header['name'] == 'From'), None)
+            if sender:
+                senders[sender] = senders.get(sender, []) + [msg_id]
+        
+        for sender, msg_ids in senders.items():
+            if Confirm.ask(f"Deseja se desinscrever e excluir {len(msg_ids)} e-mails de {sender}?"):
+                console.print(f"[cyan]Desinscrevendo e apagando e-mails de {sender}...")
+                
+                with Progress() as progress:
+                    task = progress.add_task("[red]Apagando...", total=len(msg_ids))
+                    for msg_id in msg_ids:
+                        service.users().messages().delete(userId='me', id=msg_id).execute()
+                        progress.advance(task)
+                
+                console.print(f"[bold green]Os e-mails de {sender} foram excluídos.")
+            else:
+                console.print(f"[bold yellow]Os e-mails de {sender} não foram apagados.")
+        
+        messages = messages[50:]  # Remove os 50 processados
+        if not messages or not Confirm.ask("Deseja continuar vendo mais newsletters?"):
+            break
 
 def main():
     # Autentica no Gmail
     service = authenticate_gmail()
-
-    # Opção 1: Lista de remetentes manual
-    # senders = ['no-reply@mail.instagram.com']
-
-    # Opção 2: Carregar remetentes de uma planilha Excel
-    senders = load_senders_from_excel('remetentes.xlsx')
-
-    # Deleta os e-mails
-    delete_emails_from_senders(service, senders)
+    
+    # Processa newsletters e opções de exclusão
+    unsubscribe_and_delete_emails(service)
 
 if __name__ == '__main__':
     main()
