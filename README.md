@@ -6,6 +6,8 @@ Este projeto permite **listar, se desinscrever e excluir automaticamente** e-mai
 
 > **Nota:** Atualmente, na versão **1.0**, o suporte é limitado ao Gmail. Versões futuras incluirão suporte a outros provedores de e-mail.
 
+# Preview
+
 ![Preview](https://github.com/daniloagostinho/excluir-newsletter-python/blob/main/images/Preview.gif)
 
 ## Recursos
