@@ -64,6 +64,10 @@ def delete_newsletter_emails(service):
         task = progress.add_task("[cyan]Carregando e-mails para exclusão...", total=None)
         progress.stop()
     
+    if total_newsletters == 0:
+        console.print("[bold yellow]Nenhum e-mail de newsletter encontrado no histórico.")
+        return
+    
     console.print(f"[bold green]Foram encontrados {total_newsletters} e-mails de newsletters no histórico.")
     
     if Confirm.ask(f"Deseja excluir todos os {total_newsletters} e-mails de newsletters de uma vez?"):
@@ -77,6 +81,10 @@ def delete_newsletter_emails(service):
     
     if not Confirm.ask("Prefere visualizar os e-mails antes de excluir?"):
         return
+    
+    with Progress(SpinnerColumn(), console=console) as progress:
+        task = progress.add_task("[cyan]Carregando e-mails para visualização...", total=None)
+        progress.stop()
     
     while messages:
         senders = {}
